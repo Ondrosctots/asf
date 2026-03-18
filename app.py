@@ -1,48 +1,47 @@
 import streamlit as st
 import urllib.parse
 
-# 1. SETUP: Your specific Cloudflare Worker URL
-# This is the "Bridge" that handles the Twitter/X bots
+# Config
 BASE_WORKER_URL = "https://floral-waterfall-f02a.arabiribiaa.workers.dev"
 SECRET_PASS = "ngochiton"
 
 st.set_page_config(page_title="Twitter Viral Poster", page_icon="🐦")
 st.title("🐦 Twitter Viral Video Poster")
 
-# Simple Authentication
+# Sidebar Auth
 password = st.sidebar.text_input("Access Password", type="password")
 
 if password == SECRET_PASS:
     with st.form("viral_form"):
-        video_url = st.text_input("1. Video URL (.mp4 direct link)", 
-                                placeholder="Example: https://amplify.videotwimg.live/...")
-        affiliate_link = st.text_input("2. Affiliate / Destination Link", 
-                                     placeholder="Example: https://omg10.com/...")
+        st.subheader("Generate 'Amplify' Style Link")
+        video_url = st.text_input("1. Video URL (.mp4 direct link)")
+        affiliate_link = st.text_input("2. Affiliate / Destination Link")
         
-        submit = st.form_submit_button("Generate Viral Link")
+        submit = st.form_submit_button("Generate Link")
 
     if submit:
         if video_url and affiliate_link:
-            # We encode the URLs so the Worker can read them correctly
+            # Encode URLs so they don't break the main link
             encoded_video = urllib.parse.quote(video_url, safe='')
             encoded_dest = urllib.parse.quote(affiliate_link, safe='')
             
-            # The Final Link you will paste into Twitter/X
-            # We add ?v= at the end to force X to refresh its memory (cache-buster)
-            final_link = f"{BASE_WORKER_URL}/?vid={encoded_video}&dest={encoded_dest}&v={video_url[-5:]}"
+            # Use the last part of the video URL as a cache-buster
+            v_tag = video_url[-6:] if len(video_url) > 6 else "101"
             
-            st.success("✅ Ready to Post!")
+            # The Final URL to paste on X
+            final_link = f"{BASE_WORKER_URL}/?vid={encoded_video}&dest={encoded_dest}&v={v_tag}"
+            
+            st.success("✅ Link Generated!")
             st.code(final_link)
             
-            st.info("""
-            **How to Post:**
-            1. Copy the link above.
-            2. Paste it into X (Twitter).
-            3. **WAIT 20 SECONDS** for the black video box to appear.
-            4. Delete the blue link text.
-            5. Hit **Post**.
+            st.warning("""
+            **Posting Steps:**
+            1. Paste link into X.
+            2. **WAIT 20 SECONDS** for the black video box to appear.
+            3. Delete the blue link text.
+            4. Post.
             """)
         else:
-            st.error("Please provide both the video and the destination link.")
+            st.error("Please fill in both fields.")
 else:
-    st.warning("Please enter the password to access the tool.")
+    st.info("Enter password to unlock.")
