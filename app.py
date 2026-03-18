@@ -1,47 +1,49 @@
 import streamlit as st
+import pandas as pd
 import urllib.parse
 
-# Config
-BASE_WORKER_URL = "https://floral-waterfall-f02a.arabiribiaa.workers.dev"
-SECRET_PASS = "ngochiton"
+# --- CONFIG ---
+WORKER_URL = "https://morning-tree-6df0.arabiribiaa.workers.dev"
+PASSWORD = "ngochiton"
 
-st.set_page_config(page_title="Twitter Viral Poster", page_icon="🐦")
-st.title("🐦 Twitter Viral Video Poster")
+st.set_page_config(page_title="Smart Video Link Generator", layout="wide")
 
-# Sidebar Auth
-password = st.sidebar.text_input("Access Password", type="password")
+st.title("🚀 Smart Video Link Generator")
+st.markdown("Generate native-style autoplay video links for X.")
 
-if password == SECRET_PASS:
-    with st.form("viral_form"):
-        st.subheader("Generate 'Amplify' Style Link")
-        video_url = st.text_input("1. Video URL (.mp4 direct link)")
-        affiliate_link = st.text_input("2. Affiliate / Destination Link")
-        
-        submit = st.form_submit_button("Generate Link")
+# --- GENERATOR FORM ---
+with st.container():
+    st.subheader("Create New Link")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        title = st.text_input("Internal Title", placeholder="Campaign A")
+        video_url = st.text_input("Direct MP4 Video URL", placeholder="https://site.com/video.mp4")
+    
+    with col2:
+        dest_url = st.text_input("Destination URL (Affiliate)", placeholder="https://amzn.to/...")
+        pass_input = st.text_input("Password", type="password")
 
-    if submit:
-        if video_url and affiliate_link:
-            # Encode URLs so they don't break the main link
-            encoded_video = urllib.parse.quote(video_url, safe='')
-            encoded_dest = urllib.parse.quote(affiliate_link, safe='')
-            
-            # Use the last part of the video URL as a cache-buster
-            v_tag = video_url[-6:] if len(video_url) > 6 else "101"
-            
-            # The Final URL to paste on X
-            final_link = f"{BASE_WORKER_URL}/?vid={encoded_video}&dest={encoded_dest}&v={v_tag}"
-            
-            st.success("✅ Link Generated!")
-            st.code(final_link)
-            
-            st.warning("""
-            **Posting Steps:**
-            1. Paste link into X.
-            2. **WAIT 20 SECONDS** for the black video box to appear.
-            3. Delete the blue link text.
-            4. Post.
-            """)
+    if st.button("Generate Link", use_container_width=True):
+        if pass_input == PASSWORD:
+            if video_url and dest_url:
+                # We encode the URLs as parameters so the Worker knows what to show
+                encoded_video = urllib.parse.quote(video_url)
+                encoded_dest = urllib.parse.quote(dest_url)
+                
+                # Add a random version v= to bypass X's cache
+                import time
+                version = int(time.time())
+                
+                final_link = f"{WORKER_URL}/?vid={encoded_video}&dest={encoded_dest}&v={version}"
+                
+                st.success("✅ Link Generated Successfully!")
+                st.code(final_link, language="text")
+                st.info("Paste this link into your X post. Wait a few seconds for the video to appear.")
+            else:
+                st.error("Please fill in both Video and Destination URLs.")
         else:
-            st.error("Please fill in both fields.")
-else:
-    st.info("Enter password to unlock.")
+            st.error("Incorrect Password.")
+
+st.divider()
+st.caption("Note: Ensure your video URL ends in .mp4 and is a direct link (not a landing page).")
